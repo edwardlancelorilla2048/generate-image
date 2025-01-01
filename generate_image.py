@@ -1,19 +1,20 @@
-from diffusers import StableDiffusionPipeline
 import torch
+from diffusers import StableDiffusionPipeline
 
 def generate_image(prompt, output_file):
-    # Load photorealistic model
-    model_id = "dreamlike-art/dreamlike-photoreal-2.0"  # Photorealistic Stable Diffusion model
-    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-    pipe = pipe.to("cuda" if torch.cuda.is_available() else "cpu")
+    model_id = "dreamlike-art/dreamlike-photoreal-2.0"
+    device = "cuda" if torch.cuda.is_available() else "cpu"  # Prefer GPU if available
 
-    # Generate the image
+    # Remove torch_dtype if running on CPU
+    dtype = torch.float16 if device == "cuda" else torch.float32
+
+    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
+    pipe = pipe.to(device)
+
     image = pipe(prompt).images[0]
-
-    # Save the image to a file
     image.save(output_file)
     print(f"Image saved to {output_file}")
 
 if __name__ == "__main__":
-    prompt = "A photorealistic image of a modern AI influencer, stylishly dressed, in a futuristic setting"
+    prompt = "A photorealistic image of a modern AI influencer"
     generate_image(prompt, "ai_influencer.png")
